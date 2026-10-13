@@ -24,7 +24,9 @@ COPY --chown=node:node . .
 RUN mkdir -p saidas entradas /home/node/.claude && chown -R node:node /app /home/node/.claude
 
 USER node
+# CLAUDE_CONFIG_DIR: toda a configuração do Claude Code fica no volume claude-config
 ENV HOST=0.0.0.0 \
-    PORT=3210
+    PORT=3210 \
+    CLAUDE_CONFIG_DIR=/home/node/.claude
 EXPOSE 3210
 CMD ["node", "server.js"]

@@ -1,0 +1,235 @@
+\documentclass[11pt,a4paper]{article}
+
+% -------------------------------------------------
+% Packages
+% -------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[a4paper,top=1.2cm,bottom=1.2cm,left=1.4cm,right=1.4cm]{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+
+\hypersetup{
+    colorlinks=true,
+    urlcolor=black
+}
+
+\definecolor{primary}{RGB}{25,55,109}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\titleformat{\section}
+{\Large\bfseries\color{primary}}
+{}
+{0pt}
+{}
+[\titlerule]
+
+% Espaço antes/depois dos títulos de seção.
+% Se passar de 2 páginas, diminua (ex.: {10pt}{5pt}); se sobrar espaço, aumente.
+\titlespacing*{\section}{0pt}{18pt}{9pt}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HEADER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{center}
+
+{\Huge\bfseries Rafael Caetano da Silva}
+
+\vspace{5pt}
+
+{\Large Desenvolvedor .NET Pleno}
+
+\vspace{4pt}
+
+{\small
+C\# • .NET • ASP.NET Core Web API • Entity Framework Core • SQL Server • PostgreSQL • Azure DevOps
+}
+
+\vspace{6pt}
+
+\small
+
+\faEnvelope\
+\href{mailto:rafaelkaetanodf@gmail.com}{rafaelkaetanodf@gmail.com}
+\quad|\quad
+\faPhone\
+(61) 99398-9820
+\quad|\quad
+\faMapMarker*
+Brasília - DF
+
+\vspace{3pt}
+
+\faGithub\
+\href{https://github.com/Rafael-CaetanoS}{github.com/Rafael-CaetanoS}
+\quad|\quad
+\faLinkedin\
+\href{https://linkedin.com/in/rafaelcaetanoo}{linkedin.com/in/rafaelcaetanoo}
+
+\end{center}
+
+\vspace{-0.2cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Resumo Profissional}
+
+Desenvolvedor .NET com experiência em C\#, .NET e ASP.NET Core Web API no desenvolvimento de integrações entre sistemas e aplicações corporativas. Atuação na construção e consumo de APIs REST, integração com bancos de dados relacionais (SQL Server, PostgreSQL, MySQL e Oracle) utilizando SQL e Entity Framework Core, mensageria com filas no Azure Service Bus para processamento assíncrono e desacoplamento entre serviços, e comunicação em tempo real via WebSockets com SignalR.
+
+\vspace{0.15cm}
+
+Participo da definição da arquitetura das soluções, do levantamento de requisitos técnicos junto às áreas de negócio, da revisão de código via pull requests e da tomada de decisões técnicas, exercendo atualmente funções de liderança técnica. Experiência com Clean Architecture, Domain-Driven Design (DDD), CQRS, arquitetura em camadas, SOLID, injeção de dependência e Design Patterns, além de testes automatizados com xUnit e pipelines de CI/CD no Azure DevOps.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experiência Profissional}
+
+\textbf{Coordenador Back-end}
+\hfill Ago/2025 -- Atual
+
+Grupo Orion
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+
+\item Desenvolvimento e manutenção de integrações entre sistemas corporativos, serviços externos e plataformas de monitoramento IoT utilizando C\#/.NET e ASP.NET Core Web API.
+
+\item Construção e evolução de APIs REST utilizando ASP.NET Core Web API.
+
+\item Revisão de código e de pull requests no Azure DevOps, validação de soluções técnicas e apoio aos desenvolvedores na resolução de problemas.
+
+\item Definição da arquitetura de novas funcionalidades utilizando Clean Architecture, Domain-Driven Design (DDD) e princípios SOLID.
+
+\item Tomada de decisões técnicas relacionadas à arquitetura, banco de dados, integrações, desempenho e escalabilidade das aplicações.
+
+\item Liderança técnica da equipe Back-end, apoiando o desenvolvimento dos profissionais e promovendo boas práticas de engenharia de software.
+
+\item Levantamento e análise de requisitos técnicos junto às áreas de negócio e produto, planejamento técnico das demandas e distribuição das atividades da equipe.
+
+\item Estruturação e manutenção de pipelines de CI/CD (integração e entrega contínua) utilizando Azure DevOps.
+
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Desenvolvedor Back-end Pleno}
+\hfill Abr/2025 -- Ago/2025
+
+Grupo Orion
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+
+\item Desenvolvimento de APIs REST e integrações entre sistemas com C\# e ASP.NET Core Web API, seguindo Clean Architecture e DDD.
+
+\item Modelagem e manutenção de bancos de dados relacionais PostgreSQL e MySQL.
+
+\item Implementação de testes automatizados (testes unitários) utilizando xUnit para aumento da confiabilidade das aplicações.
+
+\item Aplicação de SOLID, injeção de dependência (Dependency Injection) e Design Patterns para desenvolvimento de soluções de fácil manutenção.
+
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Analista de Sistemas (Estágio)}
+\hfill Dez/2023 -- Dez/2024
+
+Infraero
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+
+\item Desenvolvimento e manutenção de aplicações corporativas e sistemas internos de operações aeroportuárias com C\#, ASP.NET Core, Blazor e Java.
+
+\item Desenvolvimento com bancos de dados relacionais SQL Server, Oracle, PostgreSQL e MySQL.
+
+\item Versionamento de código com Git e Azure DevOps; Docker para padronização dos ambientes de desenvolvimento.
+
+\item Desenvolvimento de relatórios utilizando Microsoft Report Builder.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Projetos Relevantes}
+
+\textbf{Integração Infraspeak}
+
+Desenvolvimento de integrações entre sistemas via APIs REST para sincronização de ativos, ordens de serviço, falhas e propriedades adicionais entre sistemas corporativos.
+
+\vspace{0.2cm}
+
+\textbf{Plataforma Cortex}
+
+Responsável pelo desenvolvimento do backend da plataforma de monitoramento IoT, incluindo gerenciamento de alertas, notificações, configurações de alarmes e integração com dispositivos inteligentes.
+
+\vspace{0.2cm}
+
+\textbf{SIVWEB} -- Sistema de gerenciamento de monitores aeroportuários desenvolvido com ASP.NET Core e Blazor.
+
+\vspace{0.2cm}
+
+\textbf{SICOA} -- Sistema corporativo para identificação e controle de acesso de usuários.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Competências Técnicas}
+
+\textbf{Back-end:} C\#, .NET, ASP.NET Core Web API, APIs REST, HTTP, Programação Assíncrona (async/await), Java, Spring Boot
+
+\vspace{0.12cm}
+
+\textbf{Banco de Dados:} SQL, SQL Server, PostgreSQL, MySQL, Oracle
+
+\vspace{0.12cm}
+
+\textbf{ORM:} Entity Framework Core, Dapper, Hibernate
+
+\vspace{0.12cm}
+
+\textbf{Mensageria e Tempo Real:} Mensageria, Filas, Azure Service Bus, SignalR, WebSockets
+
+\vspace{0.12cm}
+
+\textbf{Arquitetura:} Clean Architecture, Domain-Driven Design (DDD), CQRS, Arquitetura em Camadas, SOLID, Injeção de Dependência, MVC
+
+\vspace{0.12cm}
+
+\textbf{Testes:} Testes Automatizados, Testes Unitários, xUnit
+
+\vspace{0.12cm}
+
+\textbf{Cloud e DevOps:} Azure DevOps, Git, Pull Requests, Code Review, CI/CD (Integração e Entrega Contínua), Azure, Docker
+
+\vspace{0.12cm}
+
+\textbf{Front-end:} Angular, TypeScript, JavaScript, HTML, CSS
+
+\vspace{0.12cm}
+
+\textbf{Ferramentas:} OpenAPI/Swagger, Postman, Report Builder
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formação}
+
+\textbf{Pós-graduação em Engenharia de Software}
+\hfill 2025 -- 2026
+
+Universidade Católica de Brasília
+
+\vspace{0.2cm}
+
+\textbf{Bacharelado em Sistemas de Informação}
+\hfill 2021 -- 2024
+
+Centro Universitário do Distrito Federal (UDF)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Idiomas}
+
+Português — Nativo \quad|\quad Espanhol — Intermediário \quad|\quad Inglês — Básico
+
+\end{document}

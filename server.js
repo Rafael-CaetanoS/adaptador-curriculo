@@ -149,7 +149,13 @@ function descreverFerramenta(nome, input = {}) {
     case 'Read': return /\.(png|jpe?g|webp|gif)$/i.test(arq) ? `Lendo imagem da vaga (${arq})` : `Lendo ${arq}`;
     case 'Write': return `Escrevendo ${arq}`;
     case 'Edit': return `Ajustando ${arq}`;
-    case 'Bash': return /pdftotext/.test(input.command || '') ? 'Conferindo o preenchimento das páginas' : 'Compilando o PDF para conferir as 2 páginas';
+    case 'Bash': {
+      const cmd = input.command || '';
+      if (/pdftotext/.test(cmd)) return 'Conferindo o preenchimento das páginas';
+      if (/pdflatex/.test(cmd)) return 'Compilando o PDF para conferir as 2 páginas';
+      if (/^\s*(cp|mkdir)\b/.test(cmd)) return 'Preparando a pasta da vaga';
+      return 'Executando comando';
+    }
     case 'Glob':
     case 'Grep': return 'Procurando arquivos';
     default: return nome;
