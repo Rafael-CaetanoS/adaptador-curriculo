@@ -425,6 +425,7 @@ $('#hist').addEventListener('click', async (e) => {
 // Todas usam o formato da API do OpenAI; os modelos são sugestões, dá para trocar à vontade.
 const PROVEDORES = {
   servidor:   { nome: 'Usar a IA do servidor (.env)', baseUrl: '', modelo: '', chave: false },
+  claudecode: { nome: 'Assinatura Claude (Claude Code)', tipo: 'claude-code', baseUrl: '', modelo: 'sonnet', chave: '' },
   openai:     { nome: 'OpenAI (ChatGPT)', baseUrl: 'https://api.openai.com/v1', modelo: 'gpt-4.1', chave: 'platform.openai.com/api-keys' },
   anthropic:  { nome: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com/v1', modelo: 'claude-sonnet-5-5', chave: 'console.anthropic.com' },
   gemini:     { nome: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', modelo: 'gemini-2.5-flash', chave: 'aistudio.google.com' },
@@ -450,8 +451,9 @@ function configIa() {
 // O que vai para o servidor: null = usar a IA do .env
 function configIaParaEnvio() {
   const c = configIa();
-  if (c.provedor === 'servidor' || (!c.baseUrl && !c.modelo && !c.apiKey)) return null;
-  return { baseUrl: c.baseUrl, modelo: c.modelo, apiKey: c.apiKey, maxTokens: c.maxTokens };
+  const tipo = (PROVEDORES[c.provedor] || {}).tipo || 'openai';
+  if (c.provedor === 'servidor' || (tipo === 'openai' && !c.baseUrl && !c.modelo && !c.apiKey)) return null;
+  return { tipo, baseUrl: tipo === 'openai' ? c.baseUrl : '', modelo: c.modelo, apiKey: c.apiKey, maxTokens: c.maxTokens };
 }
 
 function atualizarResumoIa() {
@@ -461,13 +463,15 @@ function atualizarResumoIa() {
     r.textContent = iaServidor?.configurado ? `servidor · ${iaServidor.modelo}` : 'nenhuma IA configurada';
     r.classList.toggle('falta', !iaServidor?.configurado);
   } else {
-    const falta = !c.baseUrl || !c.modelo || (p.chave && !c.apiKey);
+    const falta = p.tipo === 'claude-code' ? (!c.apiKey && !iaServidor?.claudeCode) : (!c.baseUrl || !c.modelo || (p.chave && !c.apiKey));
     r.textContent = falta ? 'incompleta' : `${p.nome.split(' (')[0]} · ${c.modelo}`;
     r.classList.toggle('falta', falta);
   }
   const usarServidor = c.provedor === 'servidor';
   ['#iaBaseUrl', '#iaModelo', '#iaChave', '#iaMaxTokens'].forEach((s) => { $(s).disabled = usarServidor; });
-  $('#iaChaveDica').textContent = p.chave === null ? '· não precisa' : p.chave ? `· pegue em ${p.chave}` : '';
+  if (p.tipo === 'claude-code') $('#iaBaseUrl').disabled = true;
+  $('#iaChaveDica').textContent = p.tipo === 'claude-code' ? '· token do claude setup-token (opcional se estiver no .env)'
+    : p.chave === null ? '· não precisa' : p.chave ? `· pegue em ${p.chave}` : '';
   // Indicador no cabeçalho
   $('#statusIaTxt').textContent = r.classList.contains('falta') ? 'Configure a IA' : r.textContent;
   $('#statusIa').classList.toggle('falta', r.classList.contains('falta'));

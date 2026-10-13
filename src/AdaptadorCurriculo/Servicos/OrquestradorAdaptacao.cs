@@ -20,7 +20,7 @@ public sealed partial class OrquestradorAdaptacao(
     ILogger<OrquestradorAdaptacao> logger)
 {
     private const int MaxCorrecoes = 3;
-    private const int MinLinhasPagina2 = 40;
+    private const int MinPreenchimentoPagina2 = 85; // % da altura útil da 2ª página
 
     public async Task ExecutarAsync(Job job, PedidoAdaptacao pedido, IaClienteFactory.ConfigResolvida ia, CancellationToken ct = default)
     {
@@ -41,7 +41,7 @@ public sealed partial class OrquestradorAdaptacao(
             using var cliente = iaFactory.Criar(ia);
             var opcoes = new ChatOptions { MaxOutputTokens = ia.MaxTokens };
 
-            job.Registrar(imagens.Count > 0 ? $"Lendo os prints e analisando a vaga com {ia.Modelo}" : $"Analisando a vaga com {ia.Modelo}");
+            job.Registrar(imagens.Count > 0 ? $"Lendo os prints e analisando a vaga com {ia.Nome}" : $"Analisando a vaga com {ia.Nome}");
             var resposta = await PerguntarAsync(cliente, mensagens, opcoes, ct);
             var blocos = ExtrairBlocos(resposta);
             if (!blocos.TryGetValue("curriculo_tex", out var tex) || !tex.Contains(@"\end{document}"))
@@ -132,9 +132,9 @@ public sealed partial class OrquestradorAdaptacao(
             lista.Add(new($"{c.Pdf.Paginas} páginas", $"O PDF ficou com {c.Pdf.Paginas} páginas. Precisa de exatamente 2: corte seguindo a ordem das regras ou reduza os espaçamentos."));
         else if (c.Pdf?.Paginas < 2)
             lista.Add(new("1 página", "O PDF ficou com 1 página. Precisa de 2 páginas cheias: devolva conteúdo relevante do currículo base e aumente os espaçamentos."));
-        else if (c.Pdf?.LinhasPagina2 < MinLinhasPagina2)
-            lista.Add(new($"2ª página com {c.Pdf.LinhasPagina2} linhas",
-                $"A 2ª página tem só {c.Pdf.LinhasPagina2} linhas de texto (mínimo {MinLinhasPagina2}). Preencha mais: devolva bullets/detalhes relevantes do currículo base ou aumente \\titlespacing e os \\vspace, sem passar de 2 páginas."));
+        else if (c.Pdf?.PreenchimentoPagina2 < MinPreenchimentoPagina2)
+            lista.Add(new($"2ª página {c.Pdf.PreenchimentoPagina2}% preenchida",
+                $"O texto da 2ª página só vai até {c.Pdf.PreenchimentoPagina2}% da altura (mínimo {MinPreenchimentoPagina2}%). Preencha mais: devolva bullets/detalhes relevantes do currículo base ou aumente \\titlespacing e os \\vspace, sem passar de 2 páginas."));
         if (semBase.Count > 0)
             lista.Add(new($"sem base: {string.Join(", ", semBase)}",
                 $"Estes termos aparecem no currículo, mas não existem no currículo base nem no perfil extra: {string.Join(", ", semBase)}. Remova-os do currículo (eles podem ir para \"O que falta\" no relatório)."));
@@ -150,7 +150,7 @@ public sealed partial class OrquestradorAdaptacao(
     {
         var sb = new StringBuilder("\n\n## Conferência automática\n\n");
         sb.AppendLine(c.Ok
-            ? $"- PDF compilado: **{c.Pdf?.Paginas} página(s)**, 2ª página com {c.Pdf?.LinhasPagina2?.ToString() ?? "?"} linhas de texto."
+            ? $"- PDF compilado: **{c.Pdf?.Paginas} página(s)**, 2ª página {c.Pdf?.PreenchimentoPagina2?.ToString() ?? "?"}% preenchida."
             : $"- ⚠️ O LaTeX não compilou: {c.Erro?.Split('\n').Skip(1).FirstOrDefault()}");
         sb.AppendLine(semBase.Count == 0
             ? "- Trava \"não inventar\": nenhuma tecnologia sem base no currículo/perfil."

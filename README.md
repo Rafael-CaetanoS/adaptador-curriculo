@@ -23,9 +23,17 @@ use **Testar conexão**. A configuração fica salva só no seu navegador.
 Opcional: para ter uma IA padrão do servidor (usada quando a página não manda configuração),
 copie `.env.example` para `.env` e preencha `IA_BASE_URL`, `IA_MODELO` e `IA_API_KEY`.
 
-> A assinatura do Claude (Pro/Max) não funciona aqui: as APIs exigem uma **chave de API**
-> (ex.: console.anthropic.com, platform.openai.com, aistudio.google.com). Para usar sem custo,
-> rode um modelo local com Ollama ou LM Studio.
+### Usar a assinatura do Claude (Pro/Max)
+
+Além das APIs, dá para usar a sua assinatura do Claude, pelo Claude Code que vem dentro do container:
+
+```bash
+docker compose run --rm adaptador claude setup-token
+```
+
+Coloque o token em `CLAUDE_CODE_OAUTH_TOKEN=` no `.env` (numa linha só, sem espaços) e escolha
+**Assinatura Claude (Claude Code)** no painel. A assinatura é pessoal: se outras pessoas usarem a
+página, cada uma deve usar a própria chave ou o próprio token.
 
 ## Como funciona
 

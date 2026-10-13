@@ -98,7 +98,7 @@ api.MapGet("/base-pdf", async (bool? baixar, SaidasService saidas, CancellationT
 
 // IA configurada no servidor (.env), sem expor a chave
 api.MapGet("/ia/padrao", (IaClienteFactory ia) =>
-    Results.Ok(new { configurado = ia.ServidorConfigurado, baseUrl = ia.BaseUrlServidor, modelo = ia.ModeloServidor }));
+    Results.Ok(new { configurado = ia.ServidorConfigurado, tipo = ia.TipoServidor, baseUrl = ia.BaseUrlServidor, modelo = ia.ModeloServidor, claudeCode = ia.ServidorClaudeCode }));
 
 // Testa a conexão com a IA escolhida na página
 api.MapPost("/ia/testar", async (ConfigIa? config, IaClienteFactory ia, CancellationToken ct) =>
@@ -109,7 +109,7 @@ api.MapPost("/ia/testar", async (ConfigIa? config, IaClienteFactory ia, Cancella
         using var cliente = ia.Criar(c);
         var relogio = Stopwatch.StartNew();
         var r = await cliente.GetResponseAsync("Responda apenas: ok", new ChatOptions { MaxOutputTokens = 50 }, ct);
-        return Results.Ok(new { ok = true, modelo = c.Modelo, resposta = r.Text.Trim(), ms = relogio.ElapsedMilliseconds });
+        return Results.Ok(new { ok = true, modelo = c.Nome, resposta = r.Text.Trim(), ms = relogio.ElapsedMilliseconds });
     }
     catch (Exception e)
     {
