@@ -1,0 +1,157 @@
+# Tecnologias conferidas pela trava "não inventar".
+# Se um termo desta lista aparecer no currículo gerado e NÃO estiver no curriculo-base.tex nem no
+# perfil-extra.md, o sistema pede para a IA remover (e avisa no relatório se ela insistir).
+#
+# Formato:  Termo
+#           Termo <= Implicador1; Implicador2     (o termo é aceito se algum implicador estiver na fonte)
+# A busca ignora maiúsculas/minúsculas e só casa palavras inteiras.
+
+# Linguagens
+C# <= .NET; ASP.NET
+Java
+Kotlin
+Python
+JavaScript <= Angular; TypeScript; React; Node.js
+TypeScript <= Angular
+PHP
+Ruby
+Golang
+Rust
+Swift
+Dart
+Scala
+Elixir
+
+# Back-end / frameworks
+.NET
+ASP.NET Core <= ASP.NET
+ASP.NET Core Web API <= ASP.NET Core
+Minimal API <= ASP.NET Core
+Blazor
+Entity Framework
+Entity Framework Core <= Entity Framework
+EF Core <= Entity Framework
+Dapper
+Spring Boot
+Hibernate
+Node.js
+NestJS
+Django
+Flask
+FastAPI
+Laravel
+Ruby on Rails
+gRPC
+GraphQL
+SignalR
+WebSockets <= SignalR
+MediatR
+
+# Front-end / mobile
+Angular
+React
+Vue.js
+Next.js
+Svelte
+jQuery
+Flutter
+React Native
+Xamarin
+.NET MAUI
+
+# Bancos de dados
+SQL Server
+PostgreSQL
+MySQL
+Oracle
+MariaDB
+SQLite
+MongoDB
+Redis
+Cassandra
+DynamoDB
+Cosmos DB
+Elasticsearch
+Firebase
+
+# Cloud / DevOps
+Azure
+AWS
+GCP
+Google Cloud
+Docker
+Kubernetes
+Helm
+Terraform
+Ansible
+Jenkins
+GitHub Actions
+GitLab CI
+Azure DevOps
+Azure Functions
+AWS Lambda
+Nginx
+IIS
+
+# Mensageria
+RabbitMQ
+Kafka
+Azure Service Bus
+Amazon SQS
+MassTransit
+Hangfire
+
+# Segurança / identidade
+OAuth
+OAuth 2.0
+OpenID Connect
+JWT
+Keycloak
+IdentityServer
+Microsoft Entra ID <= Azure AD
+Azure AD <= Microsoft Entra ID
+
+# Observabilidade / resiliência
+Polly
+Serilog
+NLog
+Application Insights
+OpenTelemetry
+Prometheus
+Grafana
+Datadog
+New Relic
+Kibana
+Splunk
+
+# Testes / qualidade
+xUnit
+NUnit
+MSTest
+Moq
+NSubstitute
+FluentAssertions
+JUnit
+Mockito
+Jest
+Cypress
+Selenium
+Playwright
+SonarQube
+
+# Ferramentas / plataformas
+Swagger
+OpenAPI <= Swagger
+Scalar
+Postman
+Power BI
+Digibee
+MuleSoft
+Protheus
+SAP
+Dynamics
+Salesforce
+Jira
+
+# Normas
+LGPD

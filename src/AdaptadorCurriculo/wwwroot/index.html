@@ -88,6 +88,21 @@
   .acoes .erro { flex-basis: 100%; }
   .pasta { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
 
+  /* Painel Configurar IA */
+  aside > .card + .card, aside > details + form { margin-top: 16px; }
+  details.ia summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  details.ia summary::-webkit-details-marker { display: none; }
+  details.ia summary::before { content: '▸'; color: var(--muted); }
+  details.ia[open] summary::before { content: '▾'; }
+  details.ia[open] summary { margin-bottom: 12px; }
+  .ia-resumo { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .ia-resumo.falta { color: var(--err); }
+  select { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .ia-acoes { display: flex; gap: 8px; margin-top: 14px; }
+  .ia-msg { font-size: 13px; margin: 10px 0 0; min-height: 1em; white-space: pre-wrap; }
+  .ia-msg.bom { color: var(--ok); } .ia-msg.ruim { color: var(--err); }
+  .ia-nota { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
   /* Modo largo (Editor / Comparar / Diferenças): esconde o formulário */
   main.largo { grid-template-columns: 1fr; max-width: none; }
   main.largo aside { display: none; }
@@ -128,6 +143,36 @@
 
 <main>
   <aside>
+    <details class="card ia" id="painelIa">
+      <summary><strong>Configurar IA</strong> <span class="ia-resumo" id="iaResumo"></span></summary>
+      <div class="field">
+        <label for="iaProvedor">Plataforma</label>
+        <select id="iaProvedor"></select>
+      </div>
+      <div class="field">
+        <label for="iaBaseUrl">URL base <span class="opcional">(compatível com a API do OpenAI)</span></label>
+        <input id="iaBaseUrl" placeholder="https://api.openai.com/v1" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="iaModelo">Modelo</label>
+        <input id="iaModelo" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="iaChave">Chave de API <span class="opcional" id="iaChaveDica"></span></label>
+        <input id="iaChave" type="password" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="iaMaxTokens">Máx. tokens da resposta</label>
+        <input id="iaMaxTokens" type="number" min="1000" step="1000" placeholder="16000">
+      </div>
+      <div class="ia-acoes">
+        <button type="button" id="iaTestar">Testar conexão</button>
+        <button type="button" id="iaLimpar" class="leve">Limpar</button>
+      </div>
+      <p class="ia-msg" id="iaMsg"></p>
+      <p class="ia-nota">A configuração e a chave ficam só neste navegador e vão para o seu servidor a cada adaptação. O servidor não guarda a chave. Se deixar vazio, usa a IA do <code>.env</code> do servidor.</p>
+    </details>
+
     <form class="card" id="form">
       <div class="field">
         <label for="titulo">Título da vaga</label>
@@ -192,6 +237,96 @@ $('#hist').addEventListener('click', async (e) => {
   carregarHistorico();
 });
 
+// ---- Configurar IA (fica só neste navegador) ----
+// Todas usam o formato da API do OpenAI; os modelos são sugestões, dá para trocar à vontade.
+const PROVEDORES = {
+  servidor:   { nome: 'Usar a IA do servidor (.env)', baseUrl: '', modelo: '', chave: false },
+  openai:     { nome: 'OpenAI (ChatGPT)', baseUrl: 'https://api.openai.com/v1', modelo: 'gpt-4.1', chave: 'platform.openai.com/api-keys' },
+  anthropic:  { nome: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com/v1', modelo: 'claude-sonnet-5-5', chave: 'console.anthropic.com' },
+  gemini:     { nome: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', modelo: 'gemini-2.5-flash', chave: 'aistudio.google.com' },
+  openrouter: { nome: 'OpenRouter (vários modelos)', baseUrl: 'https://openrouter.ai/api/v1', modelo: 'openai/gpt-4.1', chave: 'openrouter.ai/keys' },
+  groq:       { nome: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', modelo: 'llama-3.3-70b-versatile', chave: 'console.groq.com' },
+  deepseek:   { nome: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1', modelo: 'deepseek-chat', chave: 'platform.deepseek.com' },
+  mistral:    { nome: 'Mistral', baseUrl: 'https://api.mistral.ai/v1', modelo: 'mistral-large-latest', chave: 'console.mistral.ai' },
+  ollama:     { nome: 'Ollama (local, grátis)', baseUrl: 'http://host.docker.internal:11434/v1', modelo: 'llama3.1', chave: null },
+  lmstudio:   { nome: 'LM Studio (local, grátis)', baseUrl: 'http://host.docker.internal:1234/v1', modelo: '', chave: null },
+  outro:      { nome: 'Outra (compatível com OpenAI)', baseUrl: '', modelo: '', chave: '' },
+};
+const CHAVE_STORAGE = 'adaptador.ia';
+let iaServidor = null;
+
+function lerStorage() { try { return JSON.parse(localStorage.getItem(CHAVE_STORAGE)) || {}; } catch { return {}; } }
+function gravarStorage(v) { try { localStorage.setItem(CHAVE_STORAGE, JSON.stringify(v)); } catch {} }
+
+function configIa() {
+  const c = { provedor: $('#iaProvedor').value, baseUrl: $('#iaBaseUrl').value.trim(), modelo: $('#iaModelo').value.trim(),
+    apiKey: $('#iaChave').value.trim(), maxTokens: parseInt($('#iaMaxTokens').value, 10) || null };
+  return c;
+}
+// O que vai para o servidor: null = usar a IA do .env
+function configIaParaEnvio() {
+  const c = configIa();
+  if (c.provedor === 'servidor' || (!c.baseUrl && !c.modelo && !c.apiKey)) return null;
+  return { baseUrl: c.baseUrl, modelo: c.modelo, apiKey: c.apiKey, maxTokens: c.maxTokens };
+}
+
+function atualizarResumoIa() {
+  const c = configIa(), p = PROVEDORES[c.provedor] || PROVEDORES.outro;
+  const r = $('#iaResumo');
+  if (c.provedor === 'servidor') {
+    r.textContent = iaServidor?.configurado ? `servidor · ${iaServidor.modelo}` : 'nenhuma IA configurada';
+    r.classList.toggle('falta', !iaServidor?.configurado);
+  } else {
+    const falta = !c.baseUrl || !c.modelo || (p.chave && !c.apiKey);
+    r.textContent = falta ? 'incompleta' : `${p.nome.split(' (')[0]} · ${c.modelo}`;
+    r.classList.toggle('falta', falta);
+  }
+  const usarServidor = c.provedor === 'servidor';
+  ['#iaBaseUrl', '#iaModelo', '#iaChave', '#iaMaxTokens'].forEach((s) => { $(s).disabled = usarServidor; });
+  $('#iaChaveDica').textContent = p.chave === null ? '(não precisa)' : p.chave ? `(pegue em ${p.chave})` : '';
+}
+
+function salvarIa() { gravarStorage(configIa()); atualizarResumoIa(); }
+
+function montarPainelIa() {
+  $('#iaProvedor').innerHTML = Object.entries(PROVEDORES).map(([k, p]) => `<option value="${k}">${esc(p.nome)}</option>`).join('');
+  const salvo = lerStorage();
+  $('#iaProvedor').value = PROVEDORES[salvo.provedor] ? salvo.provedor : 'servidor';
+  $('#iaBaseUrl').value = salvo.baseUrl || '';
+  $('#iaModelo').value = salvo.modelo || '';
+  $('#iaChave').value = salvo.apiKey || '';
+  $('#iaMaxTokens').value = salvo.maxTokens || '';
+  $('#iaProvedor').addEventListener('change', () => {
+    const p = PROVEDORES[$('#iaProvedor').value];
+    $('#iaBaseUrl').value = p.baseUrl;
+    $('#iaModelo').value = p.modelo;
+    if (p.chave === null) $('#iaChave').value = '';
+    $('#iaMsg').textContent = '';
+    salvarIa();
+  });
+  ['#iaBaseUrl', '#iaModelo', '#iaChave', '#iaMaxTokens'].forEach((s) => $(s).addEventListener('input', salvarIa));
+  $('#iaLimpar').onclick = () => { gravarStorage({}); montarPainelIa(); $('#iaMsg').textContent = ''; };
+  $('#iaTestar').onclick = async () => {
+    const msg = $('#iaMsg');
+    msg.className = 'ia-msg'; msg.textContent = 'Testando…';
+    $('#iaTestar').disabled = true;
+    try {
+      const r = await api('/api/ia/testar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(configIaParaEnvio()) });
+      msg.className = 'ia-msg ' + (r.ok ? 'bom' : 'ruim');
+      msg.textContent = r.ok ? `Funcionou: ${r.modelo} respondeu "${r.resposta}" em ${(r.ms / 1000).toFixed(1)}s.` : r.erro;
+    } catch (err) {
+      msg.className = 'ia-msg ruim'; msg.textContent = err.message;
+    } finally { $('#iaTestar').disabled = false; }
+  };
+  atualizarResumoIa();
+}
+// Mostra a IA do servidor e abre o painel se ainda não houver nenhuma configurada
+api('/api/ia/padrao').then((s) => {
+  iaServidor = s;
+  if (!s.configurado && !lerStorage().provedor) $('#painelIa').open = true;
+  atualizarResumoIa();
+}).catch(() => {});
+
 // ---- Prints da vaga ----
 const MAX_IMAGENS = 8;
 let imagens = []; // data URLs
@@ -230,7 +365,7 @@ $('#form').addEventListener('submit', async (e) => {
   const titulo = $('#titulo').value.trim(), descricao = $('#descricao').value.trim();
   if (!descricao && !imagens.length) { alert('Cole a descrição da vaga ou envie um print dela.'); return; }
   try {
-    const { id } = await api('/api/adaptar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, descricao, imagens }) });
+    const { id } = await api('/api/adaptar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, descricao, imagens, ia: configIaParaEnvio() }) });
     acompanhar(id);
   } catch (err) {
     if (err.body?.id) acompanhar(err.body.id);
@@ -482,6 +617,7 @@ function ligarAcoes() {
   };
 }
 
+montarPainelIa();
 carregarHistorico();
 </script>
 </body>

@@ -1,32 +1,32 @@
-FROM node:22-bookworm-slim
+# ---------- Build (.NET SDK) ----------
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY src/AdaptadorCurriculo/AdaptadorCurriculo.csproj AdaptadorCurriculo/
+RUN dotnet restore AdaptadorCurriculo/AdaptadorCurriculo.csproj
+COPY src/AdaptadorCurriculo/ AdaptadorCurriculo/
+RUN dotnet publish AdaptadorCurriculo/AdaptadorCurriculo.csproj -c Release -o /out --no-restore
+
+# ---------- Runtime (ASP.NET + LaTeX) ----------
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 # LaTeX (pdflatex, mesmo compilador do Overleaf) + pacotes usados pelo currículo
-# (titlesec, enumitem, fontawesome5, babel português) + pdftotext para conferir as páginas.
+# (titlesec, enumitem, fontawesome5, babel português), fontes vetoriais (cm-super)
+# e pdftotext para conferir o preenchimento das páginas.
+# Fica antes do COPY do app para o cache do Docker não refazer esta etapa a cada mudança no código.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates git \
       texlive-latex-base texlive-latex-recommended texlive-latex-extra \
       texlive-fonts-recommended texlive-fonts-extra texlive-lang-portuguese \
-      poppler-utils \
+      cm-super poppler-utils \
  && rm -rf /var/lib/apt/lists/*
-
-# Fontes vetoriais (Type 1), como no Overleaf. Sem isso o PDF sai com fontes em bitmap,
-# borradas e piores para o ATS extrair o texto.
-RUN apt-get update \
- && apt-get install -y --no-install-recommends cm-super \
- && rm -rf /var/lib/apt/lists/*
-
-# Claude Code CLI (roda o /adaptar-curriculo em modo headless)
-RUN npm install -g @anthropic-ai/claude-code
 
 WORKDIR /app
-COPY --chown=node:node . .
-RUN mkdir -p saidas entradas /home/node/.claude && chown -R node:node /app /home/node/.claude
+COPY --from=build /out .
+COPY prompts/ ./prompts/
 
-USER node
-# CLAUDE_CONFIG_DIR: toda a configuração do Claude Code fica no volume claude-config
-ENV HOST=0.0.0.0 \
-    PORT=3210 \
-    CLAUDE_CONFIG_DIR=/home/node/.claude
+# DADOS_DIR: pasta do projeto montada pelo docker-compose (currículo, perfil, saídas, prompts)
+ENV ASPNETCORE_URLS=http://0.0.0.0:3210 \
+    DADOS_DIR=/dados
+USER app
 EXPOSE 3210
-CMD ["node", "server.js"]
+ENTRYPOINT ["dotnet", "AdaptadorCurriculo.dll"]

@@ -18,3 +18,7 @@ entradas/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# .NET
+bin/
+obj/

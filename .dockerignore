@@ -1,10 +1,14 @@
+.git
 .env
+.env.*
+!.env.example
 saidas
 entradas
+.preview
+.claude
+**/bin
+**/obj
 iniciar.bat
-.claude/launch.json
 *.pdf
 *.aux
 *.log
-.preview
-build.log

@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "adaptador-curriculo",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
-      "port": 3210
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/AdaptadorCurriculo"],
+      "port": 5066
     }
   ]
 }

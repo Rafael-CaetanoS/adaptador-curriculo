@@ -10,11 +10,9 @@ services:
       - path: .env
         required: false
     volumes:
-      # A pasta do projeto é montada inteira: currículo, perfil, saídas e regras
-      # ficam no seu computador (sobrevivem a rebuilds e edições valem na hora)
-      - .:/app
-      - claude-config:/home/node/.claude
+      # Seus dados ficam no seu computador: currículo base, perfil, saídas e prompts (editáveis sem rebuild)
+      - .:/dados
+    extra_hosts:
+      # Permite usar Ollama / LM Studio rodando no seu computador (http://host.docker.internal:11434/v1)
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
-volumes:
-  claude-config:

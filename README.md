@@ -2,31 +2,48 @@
 
 Cole a descrição (ou prints) de uma vaga e receba o currículo reescrito com os **termos exatos
 da vaga**, em **PDF de 2 páginas**, mais um relatório do que falta. Nada é inventado: só o que
-está em `curriculo-base.tex` e `perfil-extra.md` entra no currículo.
+está em `curriculo-base.tex` e `perfil-extra.md` entra no currículo, e o sistema confere isso em código.
 
-Tudo roda dentro de um container Docker (Node + Claude Code + LaTeX). Não é preciso instalar
-nada além do Docker.
+Funciona com **qualquer IA compatível com a API do OpenAI**: OpenAI, Claude (Anthropic), Google
+Gemini, OpenRouter, Groq, DeepSeek, Mistral, Ollama e LM Studio (locais e gratuitos), entre outras.
+Cada pessoa configura a própria IA e chave na página.
 
-## Primeira vez
+Tudo roda dentro de um container Docker (ASP.NET Core 10 + LaTeX). Não é preciso instalar nada
+além do Docker.
 
-1. **Autenticação do Claude** (uma vez só). Gere um token da sua assinatura:
+## Subir
 
-   ```bash
-   docker compose run --rm adaptador claude setup-token
-   ```
+```bash
+docker compose up -d --build
+```
 
-   Abra o link que aparecer, autorize e copie o token gerado.
+Abra **http://localhost:3210**, clique em **Configurar IA**, escolha a plataforma, cole a chave e
+use **Testar conexão**. A configuração fica salva só no seu navegador.
 
-2. **Crie o `.env`** a partir do `.env.example` e cole o token em `CLAUDE_CODE_OAUTH_TOKEN=`.
-   (Alternativa: `ANTHROPIC_API_KEY=` com uma chave da API, cobrada por uso.)
+Opcional: para ter uma IA padrão do servidor (usada quando a página não manda configuração),
+copie `.env.example` para `.env` e preencha `IA_BASE_URL`, `IA_MODELO` e `IA_API_KEY`.
 
-3. **Suba:**
+> A assinatura do Claude (Pro/Max) não funciona aqui: as APIs exigem uma **chave de API**
+> (ex.: console.anthropic.com, platform.openai.com, aistudio.google.com). Para usar sem custo,
+> rode um modelo local com Ollama ou LM Studio.
 
-   ```bash
-   docker compose up -d --build
-   ```
+## Como funciona
 
-4. Abra **http://localhost:3210**.
+```
+Página → ASP.NET Core (orquestrador) → IA (qualquer plataforma)
+             ├─ monta o prompt: prompts/sistema.md + currículo + perfil + layout + vaga (texto/prints)
+             ├─ recebe currículo LaTeX + relatório
+             ├─ compila com pdflatex e confere: 2 páginas? 2ª página cheia?
+             ├─ trava "não inventar": tecnologias de prompts/tecnologias.txt sem base no currículo/perfil
+             └─ se algo falhar, devolve os problemas para a IA corrigir (até 3 rodadas)
+```
+
+Em cada vaga, a página tem as abas:
+- **PDF**: o currículo final, com botão para baixar.
+- **Editor**: código LaTeX à esquerda e PDF à direita, como no Overleaf. `Ctrl+S` salva e recompila.
+- **Comparar**: PDF da versão salva (`curriculo-base.tex`) ao lado da versão adaptada, com rolagem sincronizada.
+- **Diferenças**: o que mudou no código, linha a linha.
+- **Resumo**, **Relatório** e **Vaga**.
 
 ## Dia a dia
 
@@ -38,25 +55,32 @@ docker compose logs -f    # vê os logs
 
 No Windows, dá para clicar duas vezes em `iniciar.bat`.
 
-Em cada vaga, a página tem as abas:
-- **Editor**: código LaTeX à esquerda e PDF à direita, como no Overleaf. `Ctrl+S` salva e recompila.
-- **Comparar**: PDF da versão salva (`curriculo-base.tex`) ao lado da versão adaptada, com rolagem sincronizada.
-- **Diferenças**: o que mudou no código, linha a linha, lado a lado.
-
 ## Onde ficam as coisas
 
 | Arquivo/pasta | O que é |
 |---|---|
-| `curriculo-base.tex` | Seu currículo mestre. Edite aqui quando mudar de emprego, etc. |
+| `curriculo-base.tex` | Seu currículo mestre. |
 | `perfil-extra.md` | Coisas reais que você sabe/fez e não estão no currículo. |
 | `saidas/<data>-<empresa>-<cargo>/` | `curriculo.pdf`, `curriculo.tex`, `relatorio.md`, `vaga.md` |
-| `entradas/` | Prints de vagas enviados pela página |
-| `.claude/skills/adaptar-curriculo/SKILL.md` | As regras do adaptador (ATS, 2 páginas, honestidade) |
+| `prompts/sistema.md` | Regras que a IA segue (ATS, 2 páginas, honestidade). Editável sem rebuild. |
+| `prompts/tecnologias.txt` | Lista da trava "não inventar". Editável sem rebuild. |
+| `prompts/layout-referencia.tex` | Modelo de layout que a IA copia. |
+| `src/AdaptadorCurriculo/` | Backend ASP.NET Core + página (`wwwroot/index.html`). |
+| `.claude/skills/adaptar-curriculo/` | Versão para usar direto no Claude Code (`/adaptar-curriculo`). |
 
-Esses arquivos ficam fora do container (volumes), então sobrevivem a `docker compose down` e rebuilds.
+A pasta do projeto é montada no container em `/dados`, então currículo, perfil, saídas e prompts
+ficam no seu computador e sobrevivem a rebuilds.
+
+## Desenvolvimento sem Docker
+
+```bash
+dotnet run --project src/AdaptadorCurriculo
+```
+
+Sobe em http://localhost:5066. Sem `pdflatex` instalado, a adaptação funciona mas o PDF não é gerado.
 
 ## Rodar em um servidor
 
 Em `docker-compose.yml`, troque `"127.0.0.1:3210:3210"` por `"3210:3210"` e **defina
-`APP_PASSWORD` no `.env`** — sem senha, qualquer pessoa com o endereço usaria sua conta Claude
-e veria seu currículo. Para acesso pela internet, coloque atrás de HTTPS (Caddy, Nginx, Cloudflare Tunnel).
+`APP_PASSWORD` no `.env`**. Coloque atrás de HTTPS (Caddy, Nginx, Cloudflare Tunnel): a chave de
+API de quem usa a página trafega em cada adaptação.
