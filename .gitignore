@@ -1,0 +1,20 @@
+# Segredos (token do Claude, senha da página)
+.env
+.env.*
+!.env.example
+
+# Gerados automaticamente
+.preview/
+build.log
+*.aux
+*.log
+*.out
+*.synctex.gz
+
+# Prints de vagas enviados pela página
+entradas/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/

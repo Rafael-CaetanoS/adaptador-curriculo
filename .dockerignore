@@ -1,0 +1,10 @@
+.env
+saidas
+entradas
+iniciar.bat
+.claude/launch.json
+*.pdf
+*.aux
+*.log
+.preview
+build.log

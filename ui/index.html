@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptador de Currículo</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<!-- Editor LaTeX (CodeMirror) e comparação de código (jsdiff + diff2html) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/stex/stex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/css/diff2html.min.css">
+<script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/js/diff2html.min.js"></script>
+<!-- PDF.js (mesmo visualizador usado pelo Overleaf) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --border: #e2e5ea; --text: #1d2330; --muted: #657084;
+    --primary: #19376d; --primary-text: #ffffff; --accent-bg: #eaf0fb;
+    --ok: #1f7a4d; --err: #b42318; --err-bg: #fdecea; --code-bg: #f3f4f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --surface: #1a1e26; --border: #2c323d; --text: #e6e9ef; --muted: #98a2b3;
+      --primary: #5b8def; --primary-text: #0b1220; --accent-bg: #1f2a3f;
+      --ok: #4cc38a; --err: #ff8a80; --err-bg: #3a1f1f; --code-bg: #141821;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card + .card { margin-top: 16px; }
+  label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
+  input, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  input:focus, textarea:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+  textarea { min-height: 240px; resize: vertical; }
+  .opcional { font-weight: 400; color: var(--muted); }
+  .drop { border: 1.5px dashed var(--border); border-radius: 8px; padding: 14px; text-align: center; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .drop:hover, .drop.sobre, .drop:focus { border-color: var(--primary); background: var(--accent-bg); outline: none; }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; background: var(--surface); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .thumbs:empty { display: none; }
+  .thumb { position: relative; width: 72px; height: 72px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; padding: 0; line-height: 18px; border-radius: 50%; font-size: 13px; background: rgba(0,0,0,.65); color: #fff; border: none; }
+  .field + .field { margin-top: 14px; }
+  button { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); width: 100%; margin-top: 14px; padding: 11px; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  h2 { font-size: 14px; margin: 0 0 10px; }
+  .hist { list-style: none; margin: 0; padding: 0; }
+  .hist li button { width: 100%; text-align: left; font-weight: 400; border: none; border-radius: 6px; padding: 7px 8px; background: transparent; }
+  .hist li button:hover, .hist li button.ativo { background: var(--accent-bg); }
+  .hist small { display: block; color: var(--muted); font-size: 12px; }
+  .vazio { color: var(--muted); text-align: center; padding: 60px 20px; }
+  .progresso ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+  .progresso ol li:last-child { color: var(--text); font-weight: 600; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: gira 1s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .erro { background: var(--err-bg); color: var(--err); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); padding: 8px 12px; }
+  .tabs button.ativo { color: var(--text); border-bottom-color: var(--primary); }
+  .md { overflow-x: auto; }
+  .md table { border-collapse: collapse; font-size: 13px; margin: 8px 0 16px; }
+  .md th, .md td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: top; }
+  .md th { background: var(--accent-bg); }
+  .md h1 { font-size: 20px; } .md h2 { font-size: 17px; margin-top: 22px; } .md h3 { font-size: 15px; }
+  .md code { background: var(--code-bg); padding: 1px 4px; border-radius: 4px; }
+  pre.tex { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow: auto; max-height: 70vh; font-size: 12.5px; margin: 0; }
+  .ok { color: var(--ok); font-weight: 600; font-size: 13px; align-self: center; }
+  a.botao { display: inline-block; text-decoration: none; font-weight: 600; border-radius: 8px; padding: 9px 14px; border: 1px solid var(--primary); background: var(--primary); color: var(--primary-text); }
+  .pdfview { height: 78vh; overflow: auto; background: #525659; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .pdfview canvas { display: block; width: 100%; height: auto; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  .pdfview canvas:last-child { margin-bottom: 0; }
+  .pdfview .vazio, .pdfview .erro { color: #e6e9ef; }
+  .selo { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .selo.bom { background: var(--accent-bg); color: var(--ok); }
+  .selo.ruim { background: var(--err-bg); color: var(--err); }
+  .acoes .erro { flex-basis: 100%; }
+  .pasta { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+
+  /* Modo largo (Editor / Comparar / Diferenças): esconde o formulário */
+  main.largo { grid-template-columns: 1fr; max-width: none; }
+  main.largo aside { display: none; }
+  .topo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+  .topo .pasta { margin: 0; }
+  .topo .espaco { flex: 1; }
+  button.leve { padding: 5px 10px; font-size: 13px; font-weight: 500; }
+  .tabs { overflow-x: auto; }
+  .tabs button { white-space: nowrap; }
+
+  /* Lado a lado (Editor e Comparar) */
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 1000px) { .lado { grid-template-columns: 1fr; } }
+  .painel { display: flex; flex-direction: column; min-width: 0; }
+  .painel-titulo { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 6px; min-height: 28px; }
+  .painel-titulo .espaco { flex: 1; }
+  .lado .pdfview { height: 80vh; }
+
+  /* Editor */
+  .CodeMirror { height: 80vh; border: 1px solid var(--border); border-radius: 8px; font: 13px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .status { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .status.sujo { color: #b26a00; }
+  .lado .erro { margin-bottom: 8px; font-size: 13px; }
+
+  /* Diferenças */
+  .diff { font-size: 12.5px; }
+  .diff .d2h-file-header { display: none; }
+  .diff .d2h-code-line-ctn { white-space: pre-wrap; word-break: break-word; }
+  .legenda { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .legenda b.add { color: var(--ok); } .legenda b.rem { color: var(--err); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Adaptador de Currículo</h1>
+  <p>Cole o título e a descrição da vaga. O currículo é ajustado com os termos exatos da vaga, sem inventar nada.</p>
+</header>
+
+<main>
+  <aside>
+    <form class="card" id="form">
+      <div class="field">
+        <label for="titulo">Título da vaga</label>
+        <input id="titulo" placeholder="Ex.: Desenvolvedor .NET Pleno (se vazio, é extraído da vaga)" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="descricao">Descrição da vaga</label>
+        <textarea id="descricao" placeholder="Cole aqui a descrição completa da vaga (ou envie prints abaixo)"></textarea>
+      </div>
+      <div class="field">
+        <label>Prints da vaga <span class="opcional">(opcional)</span></label>
+        <div class="drop" id="drop" tabindex="0" role="button">
+          Arraste imagens aqui, cole com <kbd>Ctrl</kbd>+<kbd>V</kbd> ou clique para escolher
+          <input type="file" id="arquivos" accept="image/png,image/jpeg,image/webp" multiple hidden>
+        </div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <button class="primary" id="enviar" type="submit">Adaptar currículo</button>
+    </form>
+
+    <div class="card">
+      <h2>Vagas anteriores</h2>
+      <ul class="hist" id="hist"></ul>
+    </div>
+  </aside>
+
+  <section class="card" id="resultado">
+    <div class="vazio">O resultado aparece aqui. Leva alguns minutos.</div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const md = (s) => (window.marked ? marked.parse(s || '') : `<pre>${esc(s)}</pre>`);
+
+let atual = null;      // { pasta, tex, relatorio, resposta }
+let aba = 'resumo';
+let polling = null;
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(body.erro || r.statusText), { body });
+  return body;
+}
+
+async function carregarHistorico() {
+  const lista = await api('/api/historico').catch(() => []);
+  $('#hist').innerHTML = lista.length
+    ? lista.map((h) => `<li><button data-pasta="${esc(h.pasta)}" class="${atual?.pasta === h.pasta ? 'ativo' : ''}">${esc(h.titulo)}<small>${esc(h.pasta.replace('saidas/', ''))}</small></button></li>`).join('')
+    : '<li class="pasta">Nenhuma ainda.</li>';
+}
+
+$('#hist').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-pasta]');
+  if (!b || polling) return;
+  const s = await api('/api/saida?pasta=' + encodeURIComponent(b.dataset.pasta));
+  atual = { ...s, resposta: null };
+  aba = 'pdf';
+  render();
+  carregarHistorico();
+});
+
+// ---- Prints da vaga ----
+const MAX_IMAGENS = 8;
+let imagens = []; // data URLs
+
+function lerArquivo(f) {
+  return new Promise((ok, falha) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = falha; r.readAsDataURL(f); });
+}
+async function adicionarImagens(files) {
+  for (const f of files) {
+    if (!/^image\/(png|jpeg|webp)$/.test(f.type)) continue;
+    if (imagens.length >= MAX_IMAGENS) { alert(`Máximo de ${MAX_IMAGENS} imagens.`); break; }
+    imagens.push(await lerArquivo(f));
+  }
+  renderThumbs();
+}
+function renderThumbs() {
+  $('#thumbs').innerHTML = imagens.map((src, i) => `<div class="thumb"><img src="${src}" alt="Print ${i + 1}"><button type="button" data-rm="${i}" title="Remover">×</button></div>`).join('');
+}
+$('#thumbs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-rm]');
+  if (b) { imagens.splice(+b.dataset.rm, 1); renderThumbs(); }
+});
+$('#drop').addEventListener('click', () => $('#arquivos').click());
+$('#drop').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#arquivos').click(); } });
+$('#arquivos').addEventListener('change', (e) => { adicionarImagens(e.target.files); e.target.value = ''; });
+['dragenter', 'dragover'].forEach((t) => $('#drop').addEventListener(t, (e) => { e.preventDefault(); $('#drop').classList.add('sobre'); }));
+['dragleave', 'drop'].forEach((t) => $('#drop').addEventListener(t, (e) => { e.preventDefault(); $('#drop').classList.remove('sobre'); }));
+$('#drop').addEventListener('drop', (e) => adicionarImagens(e.dataTransfer.files));
+document.addEventListener('paste', (e) => {
+  const files = [...(e.clipboardData?.files || [])].filter((f) => f.type.startsWith('image/'));
+  if (files.length) { e.preventDefault(); adicionarImagens(files); }
+});
+
+$('#form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const titulo = $('#titulo').value.trim(), descricao = $('#descricao').value.trim();
+  if (!descricao && !imagens.length) { alert('Cole a descrição da vaga ou envie um print dela.'); return; }
+  try {
+    const { id } = await api('/api/adaptar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, descricao, imagens }) });
+    acompanhar(id);
+  } catch (err) {
+    if (err.body?.id) acompanhar(err.body.id);
+    else $('#resultado').innerHTML = `<div class="erro">${esc(err.message)}</div>`;
+  }
+});
+
+function acompanhar(id) {
+  $('#enviar').disabled = true;
+  clearInterval(polling);
+  const tick = async () => {
+    let job;
+    try { job = await api('/api/status/' + id); } catch { return; }
+    if (job.status === 'running') {
+      const min = Math.floor(job.segundos / 60), seg = String(job.segundos % 60).padStart(2, '0');
+      $('#resultado').innerHTML = `<div class="progresso"><span class="spinner"></span><strong>Adaptando…</strong> <span class="pasta">${min}:${seg}</span><ol>${job.log.map((l) => `<li>${esc(l)}</li>`).join('')}</ol></div>`;
+      return;
+    }
+    clearInterval(polling); polling = null;
+    $('#enviar').disabled = false;
+    if (job.status === 'error') {
+      $('#resultado').innerHTML = `<div class="erro">${esc(job.erro)}</div>${job.resposta ? `<div class="md">${md(job.resposta)}</div>` : ''}`;
+      return;
+    }
+    atual = { ...job.saida, resposta: job.resposta, avisoPdf: job.avisoPdf };
+    aba = 'pdf';
+    render();
+    carregarHistorico();
+  };
+  tick();
+  polling = setInterval(tick, 2000);
+}
+
+// ---- Resultado: abas ----
+const ABAS_LARGAS = ['editor', 'comparar', 'diferencas'];
+let editor = null;      // instância do CodeMirror
+let rascunho = null;    // texto não salvo do editor (sobrevive à troca de aba)
+let baseTex = null;     // conteúdo de curriculo-base.tex
+let mostrarForm = false;
+const escuro = () => matchMedia('(prefers-color-scheme: dark)').matches;
+const urlPdf = () => `/api/pdf?pasta=${encodeURIComponent(atual.pasta)}&v=${encodeURIComponent(atual.pdf?.gerado || '')}`;
+const seloPaginas = (n) => n ? `<span class="selo ${n === 2 ? 'bom' : 'ruim'}">${n} ${n === 1 ? 'página' : 'páginas'}</span>` : '';
+
+async function obterBase() {
+  if (baseTex === null) baseTex = (await api('/api/base')).tex;
+  return baseTex;
+}
+
+function trocarAba(nova) {
+  aba = nova;
+  render();
+}
+
+function render() {
+  // Guarda o que estiver não salvo no editor antes de redesenhar a tela
+  if (editor) rascunho = editor.getValue() !== atual.tex ? editor.getValue() : null;
+  editor = null;
+  const abas = [['pdf', 'PDF'], ['editor', 'Editor'], ['comparar', 'Comparar'], ['diferencas', 'Diferenças'],
+    ['resumo', 'Resumo'], ['relatorio', 'Relatório'], ['vaga', 'Vaga']]
+    .filter(([k]) => (k !== 'pdf' || atual.pdf) && (k !== 'resumo' || atual.resposta) && (k !== 'vaga' || atual.vaga));
+  if (!abas.some(([k]) => k === aba)) aba = abas[0][0];
+  const largo = ABAS_LARGAS.includes(aba);
+  document.querySelector('main').classList.toggle('largo', largo && !mostrarForm);
+
+  let corpo = '';
+  if (aba === 'pdf') corpo = `<div class="pdfview" data-src="${urlPdf()}"></div>`;
+  if (aba === 'editor') corpo = `
+    <div class="lado">
+      <div class="painel">
+        <div class="painel-titulo">curriculo.tex <span class="status" id="status"></span><span class="espaco"></span>
+          <button class="leve" id="desfazerTudo" title="Descartar alterações não salvas">Descartar</button>
+          <button class="leve" id="salvar" title="Ctrl+S">Salvar e compilar</button></div>
+        <textarea id="codigo"></textarea>
+      </div>
+      <div class="painel">
+        <div class="painel-titulo">Pré-visualização ${seloPaginas(atual.pdf?.paginas)}</div>
+        ${atual.erroCompilacao ? `<div class="erro">${esc(atual.erroCompilacao)}</div>` : ''}
+        ${atual.pdf ? `<div class="pdfview" id="preview" data-src="${urlPdf()}"></div>` : '<div class="vazio">Clique em "Salvar e compilar" para gerar o PDF.</div>'}
+      </div>
+    </div>`;
+  if (aba === 'comparar') corpo = `
+    <div class="lado">
+      <div class="painel">
+        <div class="painel-titulo">Versão salva no projeto (curriculo-base.tex) <span id="paginasBase"></span></div>
+        <div class="pdfview" id="pdfBase" data-src="/api/base-pdf?v=${Date.now()}"></div>
+      </div>
+      <div class="painel">
+        <div class="painel-titulo">Nova versão (adaptada para a vaga) ${seloPaginas(atual.pdf?.paginas)}</div>
+        ${atual.pdf ? `<div class="pdfview" data-src="${urlPdf()}"></div>` : '<div class="vazio">Gere o PDF da nova versão para comparar.</div>'}
+      </div>
+    </div>`;
+  if (aba === 'diferencas') corpo = `
+    <p class="legenda">Esquerda: <code>curriculo-base.tex</code> (versão salva) · Direita: versão adaptada.
+      <b class="rem">Vermelho</b> = removido/alterado, <b class="add">verde</b> = novo.</p>
+    <div class="diff" id="diff"><div class="vazio"><span class="spinner"></span>Comparando…</div></div>`;
+  if (aba === 'resumo') corpo = `<div class="md">${md(atual.resposta)}</div>`;
+  if (aba === 'relatorio') corpo = `<div class="md">${md(atual.relatorio || '_Sem relatório._')}</div>`;
+  if (aba === 'vaga') corpo = `<div class="md">${md(atual.vaga)}</div>`;
+
+  $('#resultado').innerHTML = `
+    <div class="topo">
+      ${largo ? `<button class="leve" id="toggleForm">${mostrarForm ? '⟵ Esconder formulário' : '⟶ Mostrar formulário'}</button>` : ''}
+      <p class="pasta">${esc(atual.pasta)} ${seloPaginas(atual.pdf?.paginas)}</p>
+    </div>
+    ${atual.avisoPdf ? `<div class="erro">${esc(atual.avisoPdf)}</div>` : ''}
+    <div class="acoes">
+      ${atual.pdf ? `<a class="botao primario" href="${urlPdf()}&baixar">Baixar PDF</a>` : ''}
+      <button id="gerarPdf">${atual.pdf ? 'Recompilar PDF' : 'Gerar PDF'}</button>
+      <button id="overleaf">Abrir no Overleaf</button>
+      <button id="copiar">Copiar LaTeX</button>
+      <button id="baixar">Baixar .tex</button>
+      <span id="msg" class="ok"></span>
+    </div>
+    <div class="tabs">${abas.map(([k, n]) => `<button data-aba="${k}" class="${k === aba ? 'ativo' : ''}">${n}</button>`).join('')}</div>
+    ${corpo}`;
+
+  document.querySelectorAll('[data-aba]').forEach((b) => b.onclick = () => trocarAba(b.dataset.aba));
+  if ($('#toggleForm')) $('#toggleForm').onclick = () => { mostrarForm = !mostrarForm; trocarAba(aba); };
+  if (aba === 'editor') montarEditor();
+  const visualizadores = [...document.querySelectorAll('.pdfview')];
+  visualizadores.forEach((el) => desenharPdf(el).then(() => {
+    if (el.id === 'pdfBase') api('/api/base').then((b) => { if ($('#paginasBase')) $('#paginasBase').innerHTML = seloPaginas(b.paginas); }).catch(() => {});
+  }));
+  if (aba === 'comparar' && visualizadores.length === 2) sincronizarRolagem(...visualizadores);
+  if (aba === 'diferencas') montarDiff();
+  ligarAcoes();
+}
+
+// Desenha todas as páginas do PDF em <canvas> com o PDF.js (funciona em qualquer navegador)
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+async function desenharPdf(el) {
+  const rolagem = el.scrollTop;
+  el.innerHTML = '<div class="vazio"><span class="spinner"></span>Carregando PDF…</div>';
+  if (!window.pdfjsLib) { el.innerHTML = `<iframe src="${el.dataset.src}" style="width:100%;height:100%;border:0"></iframe>`; return; }
+  try {
+    const resp = await fetch(el.dataset.src);
+    if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).erro || 'PDF indisponível');
+    const doc = await pdfjsLib.getDocument({ data: await resp.arrayBuffer() }).promise;
+    const largura = el.clientWidth - 24;
+    const canvases = [];
+    for (let n = 1; n <= doc.numPages; n++) {
+      const pagina = await doc.getPage(n);
+      const escala = (largura / pagina.getViewport({ scale: 1 }).width) * (window.devicePixelRatio || 1);
+      const vp = pagina.getViewport({ scale: escala });
+      const c = document.createElement('canvas');
+      c.width = vp.width; c.height = vp.height;
+      await pagina.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      canvases.push(c);
+    }
+    el.replaceChildren(...canvases);
+    el.scrollTop = rolagem;
+  } catch (err) {
+    el.innerHTML = `<div class="erro">Não consegui mostrar o PDF: ${esc(err.message)}</div>`;
+  }
+}
+
+// Na aba Comparar, rolar um lado rola o outro na mesma proporção
+function sincronizarRolagem(a, b) {
+  let travado = false;
+  const seguir = (origem, destino) => () => {
+    if (travado) return;
+    travado = true;
+    const max = origem.scrollHeight - origem.clientHeight;
+    destino.scrollTop = max > 0 ? (origem.scrollTop / max) * (destino.scrollHeight - destino.clientHeight) : 0;
+    requestAnimationFrame(() => { travado = false; });
+  };
+  a.addEventListener('scroll', seguir(a, b));
+  b.addEventListener('scroll', seguir(b, a));
+}
+
+function montarEditor() {
+  editor = CodeMirror.fromTextArea($('#codigo'), {
+    mode: 'stex', lineNumbers: true, lineWrapping: true, theme: escuro() ? 'material-darker' : 'default',
+    extraKeys: { 'Ctrl-S': salvarEditor, 'Cmd-S': salvarEditor },
+  });
+  editor.setValue(rascunho ?? atual.tex ?? '');
+  const atualizarStatus = () => {
+    const sujo = editor.getValue() !== atual.tex;
+    $('#status').textContent = sujo ? '● alterações não salvas' : 'salvo';
+    $('#status').classList.toggle('sujo', sujo);
+  };
+  editor.on('change', atualizarStatus);
+  atualizarStatus();
+  $('#salvar').onclick = salvarEditor;
+  $('#desfazerTudo').onclick = () => { rascunho = null; editor.setValue(atual.tex); };
+}
+
+async function salvarEditor() {
+  if (!editor) return;
+  const tex = editor.getValue();
+  $('#salvar').disabled = true;
+  $('#status').textContent = 'compilando…';
+  try {
+    const s = await api('/api/salvar?pasta=' + encodeURIComponent(atual.pasta), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tex }),
+    });
+    const pos = editor.getScrollInfo(), cursor = editor.getCursor();
+    atual = { ...atual, ...s };
+    rascunho = null;
+    render();
+    editor.scrollTo(pos.left, pos.top); editor.setCursor(cursor); editor.focus();
+  } catch (err) {
+    $('#salvar').disabled = false;
+    $('#status').textContent = 'erro: ' + err.message;
+  }
+}
+
+async function montarDiff() {
+  try {
+    const base = await obterBase();
+    const patch = Diff.createTwoFilesPatch('curriculo-base.tex', 'curriculo.tex', base, atual.tex || '', '', '', { context: 4 });
+    $('#diff').innerHTML = Diff2Html.html(patch, {
+      outputFormat: 'side-by-side', drawFileList: false, matching: 'lines', colorScheme: escuro() ? 'dark' : 'light',
+    });
+  } catch (err) {
+    $('#diff').innerHTML = `<div class="erro">Não consegui comparar: ${esc(err.message)}</div>`;
+  }
+}
+
+window.addEventListener('beforeunload', (e) => {
+  if (editor && editor.getValue() !== atual.tex) { e.preventDefault(); e.returnValue = ''; }
+});
+
+function ligarAcoes() {
+  $('#gerarPdf').onclick = async () => {
+    $('#gerarPdf').disabled = true; $('#msg').textContent = 'Compilando…';
+    try {
+      const s = await api('/api/compilar?pasta=' + encodeURIComponent(atual.pasta), { method: 'POST' });
+      atual = { ...atual, ...s, avisoPdf: null, erroCompilacao: null }; render();
+    } catch (err) {
+      atual.avisoPdf = err.message; render();
+    }
+  };
+  $('#copiar').onclick = async () => { await navigator.clipboard.writeText(atual.tex); $('#msg').textContent = 'Copiado!'; };
+  $('#baixar').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([atual.tex], { type: 'application/x-tex' }));
+    a.download = `curriculo-${atual.pasta.split('/').pop()}.tex`;
+    a.click();
+  };
+  $('#overleaf').onclick = () => {
+    // API oficial do Overleaf para abrir um snippet como projeto novo
+    const f = document.createElement('form');
+    f.method = 'POST'; f.action = 'https://www.overleaf.com/docs'; f.target = '_blank';
+    for (const [n, v] of [['encoded_snip', encodeURIComponent(atual.tex)], ['snip_name', 'curriculo.tex'], ['engine', 'pdflatex']]) {
+      const i = document.createElement('input'); i.type = 'hidden'; i.name = n; i.value = v; f.appendChild(i);
+    }
+    document.body.appendChild(f); f.submit(); f.remove();
+  };
+}
+
+carregarHistorico();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+services:
+  adaptador:
+    build: .
+    container_name: adaptador-curriculo
+    # Só acessível pelo próprio computador. Para expor num servidor, troque para "3210:3210"
+    # e defina APP_PASSWORD no .env.
+    ports:
+      - "127.0.0.1:3210:3210"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # A pasta do projeto é montada inteira: currículo, perfil, saídas e regras
+      # ficam no seu computador (sobrevivem a rebuilds e edições valem na hora)
+      - .:/app
+      - claude-config:/home/node/.claude
+    restart: unless-stopped
+
+volumes:
+  claude-config:
