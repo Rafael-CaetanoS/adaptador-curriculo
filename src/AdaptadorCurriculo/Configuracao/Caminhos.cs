@@ -12,7 +12,9 @@ public sealed class Caminhos
     public string PerfilExtra => Path.Combine(Dados, "perfil-extra.md");
     public string Saidas => Path.Combine(Dados, "saidas");
     public string Entradas => Path.Combine(Dados, "entradas");
-    public string PreviewBase => Path.Combine(Dados, ".preview", "base");
+    // Cache do PDF do currículo base: fica na pasta temporária (não na pasta do projeto montada),
+    // para não esbarrar em permissões de arquivos criados por outro usuário do container.
+    public string PreviewBase => Path.Combine(Path.GetTempPath(), "adaptador-curriculo", "preview-base");
 
     public Caminhos(IConfiguration config, IWebHostEnvironment env)
     {

@@ -28,7 +28,7 @@ copie `.env.example` para `.env` e preencha `IA_BASE_URL`, `IA_MODELO` e `IA_API
 Além das APIs, dá para usar a sua assinatura do Claude, pelo Claude Code que vem dentro do container:
 
 ```bash
-docker compose run --rm adaptador claude setup-token
+docker compose run --rm --entrypoint claude adaptador setup-token
 ```
 
 Coloque o token em `CLAUDE_CODE_OAUTH_TOKEN=` no `.env` (numa linha só, sem espaços) e escolha
