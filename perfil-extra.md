@@ -17,6 +17,11 @@ Formato sugerido: tecnologia/experiência — onde usou — nível (básico/inte
 - Redis — cache de consultas na Plataforma Cortex — intermediário
 -->
 
+- Bootstrap — front-end
+- JPA / Spring Data JPA — usado com Java/Spring Boot
+- UML — modelagem de sistemas
+- Agentes IA — uso de Claude (Claude Code) e ChatGPT no dia a dia de desenvolvimento (uso, não construção de agentes)
+
 ## Experiências / responsabilidades
 
 <!-- Exemplos:
@@ -30,6 +35,9 @@ Formato sugerido: tecnologia/experiência — onde usou — nível (básico/inte
 - Reduzi o tempo de resposta da API X de 800ms para 200ms
 - Equipe de N desenvolvedores sob minha coordenação
 -->
+
+- Automação de climatização via WebSockets com SignalR (Grupo Orion, integrada à Plataforma Cortex): controle de 16 aparelhos de ar-condicionado do mercado Mané Vírgula, dentro do Partage Shopping (citar os dois nomes), pela aplicação ou por automações (regras) configuráveis pelos próprios usuários.
+- Economia de R$ 6 mil mensais para a empresa (Grupo Orion, recente): redesenhei a arquitetura — vários sistemas que se comunicavam entre si (e custavam caro) foram consolidados em uma única API, removi bancos de dados desnecessários e melhorei o DevOps. **No currículo, NÃO citar a consolidação em "uma única API"**: apresentar como "identifiquei e implementei uma solução para reduzir os custos da empresa" (reestruturação da arquitetura, remoção de bancos desnecessários, melhoria do DevOps).
 
 ## Certificações / cursos
 
